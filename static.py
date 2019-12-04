@@ -5,14 +5,14 @@ Redmine Task Manager
 """
 
 MAIN_MENU_TEXT = """
-1. List all tasks
-2. List only my tasks
-3. Add time to task
-4. Get user activity
-5. Create new task
-6. List somebody else tasks
-7. Create new task with default most parameters
-8. Assign task to somebody else
+0. List all tasks
+1. List only my tasks
+2. Add time to task
+3. Get user activity
+4. Create new task
+5. List somebody else tasks
+6. Create new task with default most parameters
+7. Assign task to somebody else
 9. End app"""
 
 BAD_CHOOOSE_TEXT = "Hmmm... I don't see this in menu, try again."

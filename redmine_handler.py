@@ -20,7 +20,7 @@ class RedmineManager():
     def get_project_issues(self, project_name = var.DEFAULT_PROJECT_NAME):
         self.project = self.redmine.project.get(project_name)
         self.issues_list = []
-        self.issues_id_list = []
+        #self.issues_id_list = []
         for issue in self.project.issues:
             df = {}
             df['id'] = issue.id
@@ -32,7 +32,7 @@ class RedmineManager():
                 df['assigned_to'] = 'Nobody'
             df['author'] = issue.author['name']
             df['priority'] = issue.priority['name']
-            self.issues_id_list.append(str(df['id']))
+            #self.issues_id_list.append(str(df['id']))
             self.issues_list.append(df)
 
     def get_all_statuses(self):
@@ -70,7 +70,7 @@ class RedmineManager():
                 assigned = str(issue['assigned_to']) + ' '* fill
             except:
                 assigned = '' + ' '* fill
-            print(f"|#{issue['id']} - {subject} | {status} | {assigned} | {to_do}")
+            print(f"#{issue['id']} - {subject} | {status} | {assigned} | {to_do}")
         print('-'*96)
 
     def get_user_activity(self, from_date=datetime.now().strftime('%Y-%m-%d'), to_date=datetime.now().strftime('%Y-%m-%d'), user_id=var.DEFAULT_USER_ID):
@@ -130,7 +130,7 @@ class RedmineManager():
                 fill = 40 - len(comments)
             comments = comments + ' ' * fill
             
-            print(f"|#{time['id']} - {subject} | {hours} | {comments}|")
+            print(f"#{time['id']} - {subject} | {hours} | {comments}|")
                 
         print('-'*100)
         sum_len = 6 - len(f"{sum([d['time'] for d in self.activity_list])}h")
@@ -157,28 +157,34 @@ class RedmineManager():
                 assigned = str(issue['assigned_to']) + ' '* fill
             except:
                 assigned = '' + ' ' * fill
-            print(f"|#{issue['id']} - {subject} |  + {status} +  | {assigned} | ")
+            print(f"#{issue['id']} - {subject} | {status} | {assigned} | ")
         print('-'*96)
     
-    def add_time_entry(self, id, amount_time, description, date=datetime.now().strftime('%Y-%m-%d')):
-        response = ''
+    def add_time_entry(self, id, amount_time, description, assign_to_id, status_id, done_ratio, date=datetime.now().strftime('%Y-%m-%d')):
+        response = []
         try:
-            self.redmine.time_entry.create(
+            tmp_resp = self.redmine.time_entry.create(
                 issue_id=id,
                 spent_on=date,
                 hours=amount_time,
                 comments=description
             )
+            response.append(tmp_resp)
         except Exception as e:
             print(f"Except 1 - {e}")
 
         try:
-            self.redmine.issue.update(
-                resource_id=id,
-                notes=description
+            tmp_resp = self.redmine.issue.update(
+                resource_id = id,
+                assigned_to_id = assign_to_id,
+                status_id = status_id,
+                notes = description,
+                done_ratio = done_ratio
             )
+            response.append(tmp_resp)
         except Exception as e:
             print(f"Except 2 - {e}")
+        
         return response
     
 
@@ -240,6 +246,18 @@ class RedmineManager():
                 exit(5)        
         print("\nUtworzono zadanie nr: " + str(issue.id) + " o nazwie "+ '"' + str(issue.subject)+'"')
         return {'id':issue.id, 'subject':issue.subject}
+
+    def update_task(self, id, assign_to_id, status_id, done_ratio):
+        try:
+            response = self.redmine.issue.update(
+                resource_id = id,
+                assigned_to_id = assign_to_id,
+                status_id = status_id,
+                done_ratio = done_ratio
+            )
+        except Exception as e:
+            print(f"Except 2 - {e}")
+        return response
 
     def assign_task(self, id, assign_to):
         try:

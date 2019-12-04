@@ -46,17 +46,20 @@ while True:
             print(e)
             choosen = 9
 
-    if choosen == 1:
+    if choosen == 0:
         redmine.get_project_issues(redmine.PROJECT_NAME)
         redmine.print_all_issues()
         input(static.ENTER_KEY_TEXT)
 
-    elif choosen == 2:
+    elif choosen == 1:
+        redmine.get_project_issues(redmine.PROJECT_NAME)
+        redmine.get_my_issues()
         redmine.print_my_issues()
         input(static.ENTER_KEY_TEXT)
 
-    elif choosen == 3:
-        completer_update(redmine.issues_id_list)
+    elif choosen == 2:
+        completer_update([str(d['id']) for d in redmine.issues_list])
+        print([d['id'] for d in redmine.issues_list])
         while True:
             try:
                 id = int(input("Task ID: "))
@@ -75,16 +78,73 @@ while True:
             except Exception as e:
                 print(e)
 
-        description = input("Description: ")
+        issue = redmine.redmine.issue.get(id)
+        completer_update([f for d,f in redmine.get_all_statuses().items()])
+        while True:
+            try:
+                status = input(f"Status ({issue.status.name}): ")
+                if status == '':
+                    status_id = issue.status.id
+                    break
+                else:
+                    status_id = [d for d,f in redmine.get_all_statuses().items() if f == status][0]
+                    break
+            except (ValueError):
+                print("Bad value, try again")
+            except Exception as e:
+                print(e)
+
+        try:
+            done_ratio = input(f"Done Ratio ({issue.done_ratio}): ")
+            if done_ratio == '':
+                done_ratio = issue.done_ratio
+            else:
+                try:
+                    done_ratio = int(done_ratio)
+                    if done_ratio > 100 or done_ratio < 0:
+                        raise ValueError
+                except (ValueError):
+                    print("Bad value - passing...")
+                    done_ratio = issue.done_ratio
+        except Exception as e:
+            print(e)
+            done_ratio = issue.done_ratio
+
+        completer_update(redmine.users_name_list)
+
+        try:
+            assign_to = input(f"Assign ({issue.assigned_to}): ")
+            if assign_to == '':
+                assign_to_id = issue.assigned_to.id
+            else:
+                assign_to_id = [d['id'] for d in redmine.project_users if d['name'] == assign_to][0]
+
+        except (KeyError):
+            assign_to = input(f"Assign: ")
+            if assign_to == '':
+                assign_to_id = issue.assigned_to.id
+            else:
+                assign_to_id = [d['id'] for d in redmine.project_users if d['name'] == assign_to][0]        
+        except Exception as e:
+            print(e)
+            assign_to_id = 4
+
+        while True:
+            description = input("Description: ")
+            if description == '':
+                print("Description can't be blank ")
+            else:
+                break
+
         date = input(f"Date (default {datetime.now().strftime('%Y-%m-%d')})")
         if date == '':
             date = datetime.now().strftime('%Y-%m-%d')
-        response = redmine.add_time_entry(id, amount_time, description, date)
+        response = redmine.add_time_entry(id, amount_time, description, assign_to_id, status_id, done_ratio, date)
         print(response)
         input(static.ENTER_KEY_TEXT)
         clear()
 
-    elif choosen == 4:
+    elif choosen == 3:
         date = validate_date(input(f"Date ({datetime.now().strftime('%Y-%m-%d')}): "))
         completer_update(redmine.users_name_list)
         username = input(f"User Name ({redmine.USER_NAME}): ")
@@ -104,7 +164,7 @@ while True:
         redmine.print_activity()
         input(static.ENTER_KEY_TEXT)
 
-    elif choosen == 5:
+    elif choosen == 4:
         subject = input("Subject: ")
         description = input("Description: ")
         completer_update(redmine.users_name_list)
@@ -128,7 +188,7 @@ while True:
 
         
 
-    elif choosen == 6:
+    elif choosen == 5:
         print("List somebody else tasks")
         completer_update(redmine.users_name_list)
         name = input("Who's list? ")
@@ -140,34 +200,82 @@ while True:
         clear()
 
 
-    elif choosen == 7:
+    elif choosen == 6:
         subject = input("Subject: ")
         description = input("Description: ")
         redmine.create_task(subject=subject, description=description, due_date=(datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d'), assigned_to_id=4)
         input(static.ENTER_KEY_TEXT)
         clear()
 
-    elif choosen == 8:
-        completer_update(redmine.issues_id_list)
+    elif choosen == 7:
+        completer_update([str(d['id']) for d in redmine.issues_list])
         try:
-            task_id = int(input("ID: "))
+            id = int(input("ID: "))
         except Exception as e:
             print(e)
             continue
+
+        issue = redmine.redmine.issue.get(id)
         completer_update(redmine.users_name_list)
         try:
-            assign_to = input("Assign To: ").split()
-            assign_to = ' '.join(assign_to)
-            assign_to = [d['id'] for d in redmine.project_users if d['name'] == assign_to][0]
+            assign_to = input(f"Assign ({issue.assigned_to}): ")
+            if assign_to == '':
+                assign_to_id = issue.assigned_to.id
+            else:
+                assign_to_id = [d['id'] for d in redmine.project_users if d['name'] == assign_to][0]
+
+        except:
+            try:
+                assign_to = input(f"Assign: ")
+                if assign_to == '':
+                    assign_to_id = issue.assigned_to.id
+                else:
+                    assign_to_id = [d['id'] for d in redmine.project_users if d['name'] == assign_to][0]
+            except Exception as e:
+                print(e)
+                assign_to_id = 4
+
+
+        
+        completer_update([f for d,f in redmine.get_all_statuses().items()])
+        while True:
+            try:
+                status = input(f"Status ({issue.status.name}): ")
+                if status == '':
+                    status_id = issue.status.id
+                    break
+                else:
+                    status_id = [d for d,f in redmine.get_all_statuses().items() if f == status][0]
+                    break
+            except (ValueError):
+                print("Bad value, try again")
+            except Exception as e:
+                print(e)
+
+        try:
+            done_ratio = input(f"Done Ratio ({issue.done_ratio}): ")
+            if done_ratio == '':
+                done_ratio = issue.done_ratio
+            else:
+                try:
+                    done_ratio = int(done_ratio)
+                    if done_ratio > 100 or done_ratio < 0:
+                        raise ValueError
+                except (ValueError):
+                    print("Bad value - passing...")
+                    done_ratio = issue.done_ratio
+        except Exception as e:
+            print(e)
+            done_ratio = issue.done_ratio
+
         except Exception as e:
             print(e)
             continue
 
-
-        redmine.assign_task(task_id, assign_to)
+        redmine.update_task(id, assign_to_id, status_id, done_ratio)
+        print("Done!")
         input(static.ENTER_KEY_TEXT)
         clear()
-
 
     elif choosen == 9:
         print("Soo this is the end...")
