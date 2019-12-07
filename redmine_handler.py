@@ -186,7 +186,36 @@ class RedmineManager():
             print(f"Except 2 - {e}")
         
         return response
-    
+
+    def print_description_and_comments(self, id):
+        issue = self.redmine.issue.get(id, include=['journals'])
+        print()
+        print(f"#{issue.id}-{issue.subject}")
+        print()
+        print(f"Author: {issue.author}")
+        print()
+        print("#"*40)
+        print("Description:")
+        print("#"*40)
+        print()
+        print(issue.description)
+
+        print()
+        print("#"*40)
+        print("Comments:")
+        print("#"*40)
+        print()
+
+        if len(issue.journals) > 3:
+            journals = issue.journals[-3:]
+        else:
+            journals = issue.journals
+            
+        for journal in journals:
+            print(f"{journal.created_on} - {journal.user}:")
+            print(f"{journal.notes}")
+            print()
+
 
     def get_project_users_list(self):
         self.project_users = []
@@ -267,22 +296,3 @@ class RedmineManager():
             )
         except Exception as e:
             print(f"Except 2 - {e}")
-
-class MyCompleter(object):  # Custom completer
-
-    def __init__(self, options):
-        self.options = options
-
-    def complete(self, text, state):
-        
-        line = ' '.join(readline.get_line_buffer().split())
-
-        if not line:
-            return [c for c in self.options][state]
-        else:
-            return [c for c in self.options if line in c][state]
-
-        try: 
-            return self.matches[state]
-        except IndexError:
-            return None

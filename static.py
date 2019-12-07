@@ -13,6 +13,7 @@ MAIN_MENU_TEXT = """
 5. List somebody else tasks
 6. Create new task with default most parameters
 7. Assign task to somebody else
+8. Show description and comments for task
 9. End app"""
 
 BAD_CHOOOSE_TEXT = "Hmmm... I don't see this in menu, try again."
